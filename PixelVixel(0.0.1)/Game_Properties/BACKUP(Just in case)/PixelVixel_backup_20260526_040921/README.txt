@@ -1,0 +1,32 @@
+If you got this on GitHub thanks! 
+
+I will eventually make it on itch.io
+this message was here since: 5/26/2026
+
+___________________________________________________________________________________________________________
+                                                                       \How To Play/
+
+1-click the VixlePixel.Html to boot it up 
+2-Enjoy!
+
+*You Can drag it to Your DeskTop For Better Accessibility*
+
+
+
+
+
+(Copyright Rules? you can change all you want if u need a fresh copy delete the whole file and get another one! :)
+)                                   
+                    V game Date Info V
+___________________________________________________________________________________
+l                                                                                 l
+l            BETA TEST VERSION: 0.0.0.1 (First update)                            l
+l                                                                                 l
+l                                                                                 l
+l                                                                                 l
+l                                                                                 l
+l                                                                                 l
+l________________________File/Runs/On/HTML/Code?/_________________________________l
+
+
+

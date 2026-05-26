@@ -1,0 +1,1846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Vixel - Game Hub & Platformer</title>
+    <!-- Google Fonts: Retro pixel font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+    <style>
+        /* Reset and Base Styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            image-rendering: pixelated;
+        }
+
+        body {
+            font-family: 'Press Start 2P', monospace;
+            background-color: #5c94fc; /* Retro sky blue */
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* --- PIXEL ART BACKGROUND & LAYERS --- */
+        .sky-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            background-image: 
+                linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px),
+                linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px);
+            background-size: 16px 16px; /* Pixel grid overlay */
+            transition: background 1.5s ease;
+        }
+
+        /* Floating Pixel Clouds (Menu Background) */
+        .clouds-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 40%;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .pixel-cloud {
+            position: absolute;
+            background: #ffffff;
+            height: 30px;
+            width: 90px;
+            box-shadow: 
+                0 10px 0 #ffffff, -10px 10px 0 #ffffff, 10px 10px 0 #ffffff,
+                0 20px 0 #ffffff, -20px 20px 0 #ffffff, 20px 20px 0 #ffffff,
+                0 30px 0 #dcdcdc, -20px 30px 0 #dcdcdc, 20px 30px 0 #dcdcdc; /* Pixel shadow layer */
+            opacity: 0.85;
+            animation: floatCloud 30s linear infinite;
+        }
+
+        .cloud-1 { top: 15%; left: -120px; animation-duration: 32s; transform: scale(1.3); }
+        .cloud-2 { top: 45%; left: -150px; animation-duration: 48s; transform: scale(0.9); }
+        .cloud-3 { top: 25%; left: -200px; animation-duration: 24s; transform: scale(1.1); }
+
+        @keyframes floatCloud {
+            0% { left: -200px; }
+            100% { left: 100vw; }
+        }
+
+        /* Grass and Soil Layers */
+        .grass-floor {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 25vh;
+            background: #5c9e31;
+            z-index: 3;
+            border-top: 12px solid #74c33a; /* Light grassy top layer */
+            box-shadow: 
+                inset 0 24px 0 #477d26,  /* Muddy grass shadow */
+                inset 0 44px 0 #8b5a2b,  /* Top soil layer */
+                inset 0 100vh 0 #6e401f; /* Bedrock soil layer */
+            transition: transform 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* Dynamic Menu Window Frame */
+        .menu-window {
+            position: relative;
+            z-index: 10;
+            display: none; /* Controlled by JS switching */
+            flex-direction: column;
+            align-items: center;
+            width: 90%;
+            max-width: 500px;
+            padding: 35px;
+            background: #181010;
+            border: 8px solid #ffffff;
+            outline: 8px solid #181010;
+            box-shadow: 12px 12px 0px rgba(0, 0, 0, 0.5);
+            transition: transform 0.1s ease;
+        }
+
+        /* Active screen trigger */
+        .menu-window.active {
+            display: flex;
+            animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.85); opacity: 0.5; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Clean Headers */
+        .menu-header {
+            font-size: 2rem;
+            color: #ffffff;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 4px 4px 0px #477d26;
+            text-align: center;
+            line-height: 1.3;
+        }
+
+        .game-title {
+            font-size: 2.8rem;
+            color: #ffffff;
+            margin-bottom: 35px;
+            text-transform: uppercase;
+            text-shadow: 5px 5px 0px #477d26;
+            animation: floatHeader 3s ease-in-out infinite;
+            text-align: center;
+        }
+
+        @keyframes floatHeader {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        /* --- BUTTONS SYSTEM --- */
+        .buttons-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            width: 100%;
+        }
+
+        .btn-retro {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.9rem;
+            color: #ffffff;
+            background-color: #a0522d; /* Dirt brown */
+            padding: 16px 20px;
+            border: 4px solid #ffffff;
+            cursor: pointer;
+            text-shadow: 2px 2px 0px #000000;
+            box-shadow: inset -4px -4px 0px #5c2e16, inset 4px 4px 0px #cd853f, 4px 4px 0px #000000;
+            width: 100%;
+            transition: transform 0.05s ease, background-color 0.1s ease;
+            outline: none;
+        }
+
+        .btn-retro:hover {
+            background-color: #5c9e31; /* Grass green on hover */
+            box-shadow: inset -4px -4px 0px #3a661f, inset 4px 4px 0px #74c33a, 4px 4px 0px #000000;
+        }
+
+        .btn-retro:active {
+            transform: translate(2px, 2px);
+            box-shadow: inset 4px 4px 0px #3a661f, inset -4px -4px 0px #74c33a, 2px 2px 0px #000000;
+        }
+
+        .btn-primary {
+            background-color: #5c9e31;
+            box-shadow: inset -4px -4px 0px #3a661f, inset 4px 4px 0px #74c33a, 4px 4px 0px #000000;
+        }
+        .btn-primary:hover {
+            background-color: #74c33a;
+            box-shadow: inset -4px -4px 0px #5c9e31, inset 4px 4px 0px #a6e246, 4px 4px 0px #000000;
+        }
+
+        /* Styled red button for restart and critical actions */
+        .btn-red {
+            background-color: #cc2a2a;
+            box-shadow: inset -4px -4px 0px #7a1414, inset 4px 4px 0px #ff5c5c, 4px 4px 0px #000000;
+        }
+        .btn-red:hover {
+            background-color: #ff3e3e;
+            box-shadow: inset -4px -4px 0px #cc2a2a, inset 4px 4px 0px #ff7a7a, 4px 4px 0px #000000;
+        }
+
+        /* --- OPTIONS LAYOUT --- */
+        .settings-grid {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #ffffff;
+            font-size: 0.75rem;
+            text-shadow: 2px 2px 0px #000;
+            background: rgba(0,0,0,0.25);
+            padding: 10px 14px;
+            border: 3px solid #3a2214;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 140px;
+        }
+
+        .pixel-range {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 12px;
+            background: #3a2214;
+            border: 2px solid #ffffff;
+            outline: none;
+        }
+
+        .pixel-range::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #74c33a;
+            border: 2px solid #181010;
+            cursor: pointer;
+            box-shadow: -2px 2px 0px #000;
+        }
+
+        .btn-toggle {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.65rem;
+            color: #ffffff;
+            background-color: #a0522d;
+            border: 3px solid #ffffff;
+            padding: 6px 12px;
+            cursor: pointer;
+            text-shadow: 2px 2px 0px #000000;
+            box-shadow: inset -2px -2px 0px #5c2e16, inset 2px 2px 0px #cd853f;
+        }
+        .btn-toggle.enabled {
+            background-color: #5c9e31;
+            box-shadow: inset -2px -2px 0px #3a661f, inset 2px 2px 0px #74c33a;
+        }
+
+        /* --- GAME SCREEN CANVAS AREA --- */
+        .game-window-wrapper {
+            position: relative;
+            z-index: 10;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 95%;
+            max-width: 600px;
+            border: 8px solid #ffffff;
+            outline: 8px solid #181010;
+            box-shadow: 12px 12px 0px rgba(0, 0, 0, 0.6);
+            background: #181010;
+        }
+
+        .game-window-wrapper.active {
+            display: flex;
+        }
+
+        .game-header-bar {
+            width: 100%;
+            background-color: #3a2214;
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #ffffff;
+            font-size: 0.55rem;
+            border-bottom: 6px solid #ffffff;
+        }
+
+        /* Cog settings icon button style */
+        .cog-btn {
+            background: none;
+            border: none;
+            color: #ffffff;
+            font-size: 1.1rem;
+            cursor: pointer;
+            outline: none;
+            transition: transform 0.15s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .cog-btn:hover {
+            transform: rotate(45deg) scale(1.15);
+        }
+
+        .lives-container {
+            color: #ff3e3e;
+            font-size: 0.75rem;
+        }
+
+        canvas {
+            display: block;
+            background-color: #5c94fc;
+            width: 100%;
+            max-height: 70vh;
+            image-rendering: pixelated;
+        }
+
+        /* Mobile Controls */
+        .mobile-controls {
+            display: none;
+            width: 100%;
+            background-color: #181010;
+            padding: 15px;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 6px solid #ffffff;
+        }
+
+        .dpad-btn {
+            font-family: 'Press Start 2P', monospace;
+            width: 60px;
+            height: 60px;
+            color: #fff;
+            background: #a0522d;
+            border: 4px solid #fff;
+            box-shadow: inset -4px -4px 0 #5c2e16, 4px 4px 0 #000;
+            font-size: 1.2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 8px;
+        }
+        .dpad-btn:active {
+            background: #5c9e31;
+            box-shadow: inset 4px 4px 0 #3a661f, 2px 2px 0 #000;
+            transform: translate(2px, 2px);
+        }
+
+        /* --- DIALOG MODALS --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease-in-out;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-box {
+            background-color: #181010;
+            border: 6px solid #ffffff;
+            outline: 6px solid #181010;
+            padding: 30px;
+            width: 85%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 10px 10px 0px rgba(0, 0, 0, 0.6);
+            transform: scale(0.85);
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .modal-overlay.active .modal-box {
+            transform: scale(1);
+        }
+
+        .modal-text {
+            color: #ffffff;
+            font-size: 0.8rem;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            text-shadow: 2px 2px 0px #000;
+        }
+
+        .btn-modal {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.75rem;
+            color: #ffffff;
+            background-color: #5c9e31;
+            padding: 12px 24px;
+            border: 4px solid #ffffff;
+            cursor: pointer;
+            text-shadow: 2px 2px 0px #000;
+            box-shadow: inset -3px -3px 0px #3a661f, inset 3px 3px 0px #74c33a, 3px 3px 0px #000;
+        }
+
+        /* --- DEV WARP PANEL SYSTEM (___) --- */
+        .dev-warp-container {
+            width: 100%;
+            margin-top: 25px;
+            border-top: 4px dashed #ff3e3e;
+            padding-top: 15px;
+            text-align: center;
+            display: none;        
+        }
+
+        .secret-burger {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            font-size: 1.2rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            outline: none;
+            filter: drop-shadow(2px 2px 0px #000);
+            z-index: 20;
+            transition: transform 0.1s ease;
+        }
+        .secret-burger:hover {
+            transform: scale(1.1);
+        }
+        .secret-burger:active {
+            transform: scale(0.9);
+        }
+
+        .dev-title {
+            color: #ff3e3e;
+            font-size: 0.5rem;
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+        }
+
+        .warp-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+        }
+
+        .btn-warp {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.45rem;
+            background: #222;
+            color: #00ff00;
+            border: 2px solid #00ff00;
+            padding: 8px 2px;
+            cursor: pointer;
+        }
+        .btn-warp:hover {
+            background: #00ff00;
+            color: #000;
+        }
+
+        /* General Shake Animation */
+        .shake {
+            animation: shakeScreen 0.4s ease-in-out;
+        }
+
+        @keyframes shakeScreen {
+            0%, 100% { transform: translate(0, 0); }
+            20% { transform: translate(-6px, 4px); }
+            40% { transform: translate(5px, -5px); }
+            60% { transform: translate(-4px, 1px); }
+            80% { transform: translate(3px, -2px); }
+        }
+
+        /* Branding/Footers */
+        .footer {
+            position: absolute;
+            bottom: 15px;
+            right: 20px;
+            z-index: 5;
+            font-size: 0.55rem;
+            color: #ffffff;
+            text-shadow: 2px 2px 0px #000;
+        }
+
+        .audio-pill {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            z-index: 5;
+            font-size: 0.55rem;
+            color: #ffffff;
+            background-color: rgba(0,0,0,0.4);
+            padding: 8px 12px;
+            border: 2px solid #ffffff;
+            text-shadow: 1px 1px 0px #000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sky Grid & Clouds (Visual Layers) -->
+    <div class="sky-grid" id="sky"></div>
+    <div class="clouds-container" id="menu-clouds">
+        <div class="pixel-cloud cloud-1"></div>
+        <div class="pixel-cloud cloud-2"></div>
+        <div class="pixel-cloud cloud-3"></div>
+    </div>
+    
+    <!-- Grassy Floor Base -->
+    <div class="grass-floor" id="floor-dirt"></div>
+
+    <!-- Active Audio Status Pill -->
+    <div class="audio-pill" onclick="toggleAudioInit()">
+        <span id="audio-light" style="color:#ff3e3e;">●</span> <span id="audio-status-txt">CLICK TO ACTIVATE SOUNDTRACK</span>
+    </div>
+
+    <!-- MAIN MENU WINDOW -->
+    <div class="menu-window active" id="window-main">
+        <h1 class="game-title">PIXEL<br>VIXEL</h1>
+        <div class="buttons-stack">
+            <button class="btn-retro btn-primary" onclick="startGame()">START GAME</button>
+            <button class="btn-retro" onclick="switchWindow('window-main', 'window-options')">OPTIONS</button>
+            <button class="btn-retro" onclick="switchWindow('window-main', 'window-credits')">CREDITS</button>
+        </div>
+    </div>
+
+    <!-- OPTIONS SCREEN -->
+    <div class="menu-window" id="window-options">
+        <button class="secret-burger" id="burger-btn" onclick="toggleDevMode()" title="Secret Options">🍔</button>
+        <h2 class="menu-header">Options</h2>
+        
+        <div class="settings-grid">
+            <div class="setting-row">
+                <span>MUSIC BGM</span>
+                <button class="btn-toggle enabled" id="toggle-bgm" onclick="toggleOption('toggle-bgm')">ON</button>
+            </div>
+            
+            <div class="setting-row">
+                <span>SFX VOLUME</span>
+                <div class="slider-container">
+                    <input type="range" class="pixel-range" id="vol-sfx" min="0" max="100" value="80" oninput="handleSlider(this)">
+                </div>
+            </div>
+
+            <div class="setting-row">
+                <span>SOUND ENGINE</span>
+                <button class="btn-toggle enabled" id="toggle-synth" onclick="toggleOption('toggle-synth')">FM SYNTH</button>
+            </div>
+        </div>
+
+        <!-- Dynamic Context Options Buttons -->
+        <button class="btn-retro btn-red" id="btn-restart-options" style="margin-bottom: 15px; display: none;" onclick="restartGameFromOptions()">RESTART GAME</button>
+        <button class="btn-retro" onclick="goBackFromOptions()">BACK</button>
+    </div>
+
+    <!-- CREDITS SCREEN -->
+    <div class="menu-window" id="window-credits">
+        <h2 class="menu-header">Credits</h2>
+        
+        <div class="settings-grid" style="text-align: center; color: #ffffff; font-size: 0.6rem; line-height: 1.8; text-shadow: 2px 2px 0px #000;">
+            <p style="color: #74c33a; margin-bottom: 5px;">DEVELOPER</p>
+            <p style="margin-bottom: 12px;">BiGBOi Studio</p>
+
+            <p style="color: #74c33a; margin-bottom: 5px;">Engine</p>
+            <p style="margin-bottom: 12px;">HTML</p>
+
+            <p style="color: #74c33a; margin-bottom: 5px;">SOUNDS AND MUSIC</p>
+            <p>EZkidEZ on TikTok </p>
+        </div>
+
+        <button class="btn-retro" onclick="switchWindow('window-credits', 'window-main')">BACK</button>
+    </div>
+
+    <!-- GAMEPLAY VIEW SCREEN -->
+    <div class="game-window-wrapper" id="window-game">
+        <div class="game-header-bar">
+            <div>LVL: <span id="game-lvl-val" style="color:#74c33a;">1</span></div>
+            <div>BOOTS: <span id="game-boots-val" style="color:#00ffff; font-weight: bold;">NONE</span></div>
+            <div>ALTITUDE: <span id="game-alt-val" style="color:#ffff00;">0m</span></div>
+            <div class="lives-container" id="game-lives-val">❤❤❤</div>
+            <!-- Cog Settings Button -->
+            <button class="cog-btn" onclick="openOptionsFromGame()" title="Options">⚙</button>
+        </div>
+        
+        <!-- Canvas Game viewport -->
+        <canvas id="gameCanvas" width="500" height="500"></canvas>
+
+        <!-- Dynamic Mobile Controllers -->
+        <div class="mobile-controls" id="m-controls">
+            <div style="display:flex; gap:12px;">
+                <button class="dpad-btn" id="btn-left">◀</button>
+                <button class="dpad-btn" id="btn-right">▶</button>
+            </div>
+            <button class="dpad-btn" id="btn-jump" style="width:80px;">JUMP</button>
+        </div>
+
+        <!-- _____ DEVELOPMENT TOOLS DIVISION & LEVEL WARPING SYSTEM _____ -->
+        <div class="dev-warp-container">
+            <div class="dev-title">_______________________ DEV LEVEL WARP GATE _______________________</div>
+            <div class="warp-grid">
+                <button class="btn-warp" onclick="devWarp(1)">LVL 1<br>(Island)</button>
+                <button class="btn-warp" onclick="devWarp(20)">LVL 20<br>(Space)</button>
+                <button class="btn-warp" onclick="devWarp(40)">LVL 40<br>(Galaxy)</button>
+                <button class="btn-warp" onclick="devWarp(55)">LVL 55<br>(Danger)</button>
+                <button class="btn-warp" onclick="devWarp(100)">LVL 100<br>(Boss)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Dialog Modal -->
+    <div class="modal-overlay" id="custom-modal">
+        <div class="modal-box">
+            <p class="modal-text" id="modal-text-content">Message placeholder</p>
+            <button class="btn-modal" onclick="hideSystemModal()">CONTINUE</button>
+        </div>
+    </div>
+
+    <div class="footer">© 2026 BiGBOi Game Studio</div>
+
+    <script>
+        
+        // --- WEB AUDIO SYNTH MUSIC & SFX ---
+        let audioCtx = null;
+        let isBgmOn = true;
+        let sfxVolume = 0.8;
+        
+        // Music node variables
+        let musicInterval = null;
+        let beatCounter = 0;
+        let currentAltitudeZone = 1; // 1: Island/Sky, 2: Space, 3: Galaxy, 4: Boss
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                startProceduralMusic();
+                
+                // Update UI light
+                document.getElementById('audio-light').style.color = '#74c33a';
+                document.getElementById('audio-status-txt').innerText = 'CALM 8-BIT SOUNDTRACK ACTIVE';
+            }
+        }
+
+        function toggleAudioInit() {
+            initAudio();
+            playBeep(440, 0.1, 'triangle');
+        }
+
+        function playBeep(frequency, duration, type = 'sine') {
+            if (!audioCtx) return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                osc.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+
+                osc.type = type;
+                osc.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+
+                gainNode.gain.setValueAtTime(sfxVolume * 0.1, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) {
+                console.warn(e);
+            }
+        }
+
+        function playMusicTone(frequency, duration, type = 'square', volume = 0.035, delay = 0) {
+            if (!audioCtx) return;
+            try {
+                const startTime = audioCtx.currentTime + delay;
+                const osc = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+
+                osc.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+
+                osc.type = type;
+                osc.frequency.setValueAtTime(frequency, startTime);
+                gainNode.gain.setValueAtTime(0.001, startTime);
+                gainNode.gain.linearRampToValueAtTime(volume, startTime + 0.03);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+
+                osc.start(startTime);
+                osc.stop(startTime + duration + 0.04);
+            } catch (e) {
+                console.warn(e);
+            }
+        }
+
+        // Calm procedural 8-bit loop that keeps the game relaxed while climbing
+        function startProceduralMusic() {
+            if (musicInterval) clearInterval(musicInterval);
+            
+            musicInterval = setInterval(() => {
+                if (!isBgmOn || !audioCtx) return;
+
+                const calmPatterns = {
+                    1: [261.63, 329.63, 392.00, 523.25, 392.00, 329.63, 293.66, 392.00],
+                    2: [246.94, 311.13, 369.99, 493.88, 369.99, 311.13, 277.18, 369.99],
+                    3: [220.00, 277.18, 329.63, 440.00, 329.63, 277.18, 246.94, 329.63],
+                    4: [196.00, 246.94, 293.66, 392.00, 293.66, 246.94, 220.00, 293.66]
+                };
+                const bassRoots = {
+                    1: [130.81, 146.83, 164.81, 196.00],
+                    2: [123.47, 138.59, 155.56, 185.00],
+                    3: [110.00, 123.47, 146.83, 164.81],
+                    4: [98.00, 110.00, 123.47, 146.83]
+                };
+                const zone = calmPatterns[currentAltitudeZone] ? currentAltitudeZone : 1;
+                const note = calmPatterns[zone][beatCounter % calmPatterns[zone].length];
+                const bass = bassRoots[zone][Math.floor(beatCounter / 2) % bassRoots[zone].length];
+
+                playMusicTone(note, 0.38, 'square', 0.028);
+
+                if (beatCounter % 2 === 0) {
+                    playMusicTone(bass, 0.65, 'triangle', 0.022);
+                }
+
+                if (beatCounter % 8 === 4) {
+                    playMusicTone(note * 1.5, 0.32, 'sine', 0.018, 0.08);
+                }
+
+                beatCounter++;
+            }, 520);
+        }
+
+
+        // --- INTERFACE STATE MANAGEMENT ---
+        let devModeActive = false;
+        let previousWindowBeforeOptions = 'window-main';
+
+        function toggleDevMode() {
+            devModeActive = !devModeActive;
+            const devContainer = document.querySelector('.dev-warp-container');
+            
+            if (devModeActive) {
+                devContainer.style.display = 'block';
+                playBeep(880, 0.1, 'triangle');
+                setTimeout(() => playBeep(1100, 0.15, 'triangle'), 80);
+                showSystemModal("SECRET DEV MODE UNLOCKED!<br><br>The Developer Level Warp Gate is now active at the bottom of the game viewport!");
+            } else {
+                devContainer.style.display = 'none';
+                playBeep(220, 0.25, 'sawtooth');
+                showSystemModal("DEV MODE DISABLED<br><br>The Developer Level Warp Gate has been hidden.");
+            }
+        }
+
+        function switchWindow(currentId, targetId) {
+            playBeep(523.25, 0.08, 'sine');
+            document.getElementById(currentId).classList.remove('active');
+            
+            if (currentId === 'window-main' && targetId === 'window-options') {
+                previousWindowBeforeOptions = 'window-main';
+                document.getElementById('btn-restart-options').style.display = 'none';
+            }
+
+            setTimeout(() => {
+                document.getElementById(targetId).classList.add('active');
+            }, 50);
+        }
+
+        function openOptionsFromGame() {
+            playBeep(523.25, 0.08, 'sine');
+            previousWindowBeforeOptions = 'window-game';
+            
+            // Show options screen, expose the restart button
+            document.getElementById('window-game').classList.remove('active');
+            document.getElementById('window-options').classList.add('active');
+            document.getElementById('btn-restart-options').style.display = 'block';
+        }
+
+        function goBackFromOptions() {
+            playBeep(523.25, 0.08, 'sine');
+            document.getElementById('window-options').classList.remove('active');
+            
+            if (previousWindowBeforeOptions === 'window-game') {
+                document.getElementById('window-game').classList.add('active');
+                // Re-focus gameplay canvas for inputs
+                document.getElementById('gameCanvas').focus();
+            } else {
+                document.getElementById('window-main').classList.add('active');
+            }
+        }
+
+        function restartGameFromOptions() {
+            playBeep(650, 0.15, 'triangle');
+            document.getElementById('window-options').classList.remove('active');
+            startGame();
+        }
+
+        function showSystemModal(message) {
+            const modal = document.getElementById('custom-modal');
+            const content = document.getElementById('modal-text-content');
+            content.innerHTML = message;
+            modal.classList.add('active');
+        }
+
+        function hideSystemModal() {
+            playBeep(587.33, 0.06, 'triangle');
+            const modal = document.getElementById('custom-modal');
+            modal.classList.remove('active');
+            // Re-focus gameplay canvas
+            document.getElementById('gameCanvas').focus();
+        }
+
+        function toggleOption(btnId) {
+            const btn = document.getElementById(btnId);
+            const isEnabled = btn.classList.contains('enabled');
+            playBeep(440, 0.1, 'square');
+
+            if (isEnabled) {
+                btn.classList.remove('enabled');
+                btn.innerText = 'OFF';
+                if (btnId === 'toggle-bgm') isBgmOn = false;
+            } else {
+                btn.classList.add('enabled');
+                btn.innerText = 'ON';
+                if (btnId === 'toggle-bgm') isBgmOn = true;
+            }
+        }
+
+        function handleSlider(slider) {
+            sfxVolume = parseFloat(slider.value) / 100;
+            playBeep(330 + (sfxVolume * 400), 0.05, 'sine');
+        }
+
+
+        // --- PLATFORMER GAME ENGINE & SYSTEM ---
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let gameLoopId = null;
+        let isGameOver = false;
+
+        // Player proportions: Normal goofy head, tiny body, goofy stick limbs
+        const player = {
+            x: 230,
+            y: 350,
+            width: 24,
+            height: 32,
+            vx: 0,
+            vy: 0,
+            speed: 4,
+            jumpStrength: -11,
+            grounded: false,
+            lives: 3,
+            eyeWobble: 0,
+            limbSwing: 0,
+            bootCharges: 0 // Active Super Boot weapon charges (max 2)
+        };
+
+        // Game Environment states
+        let level = 1;
+        let altitude = 0; // Altitude in meters
+        let platforms = [];
+        let enemies = [];
+        let items = []; // Active Boots, Hearts, and Jump Pad pickups
+        let shootingStars = [];
+        let backgroundStars = [];
+        let boss = {
+            active: false,
+            x: 180,
+            y: 60,
+            width: 140,
+            height: 90,
+            maxHP: 2000,
+            hp: 2000,
+            attackTimer: 0,
+            attackX: 0,
+            isAttacking: false,
+            strikeFrame: 0,
+            hitCooldown: 0
+        };
+
+        // Keyboard Controls
+        const keys = {
+            left: false,
+            right: false,
+            up: false
+        };
+
+        // Init Background stars once
+        for (let i = 0; i < 40; i++) {
+            backgroundStars.push({
+                x: Math.random() * 500,
+                y: Math.random() * 500,
+                size: Math.random() * 2 + 1,
+                alpha: Math.random()
+            });
+        }
+
+        // --- EVENT LISTENERS & INPUTS ---
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = true;
+            if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = true;
+            if (e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Space') keys.up = true;
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = false;
+            if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = false;
+            if (e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Space') keys.up = false;
+        });
+
+        // Mobile Controls hooks
+        const detectTouch = ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+        if (detectTouch) {
+            document.getElementById('m-controls').style.display = 'flex';
+        }
+
+        function hookMobileBtn(id, targetKey) {
+            const btn = document.getElementById(id);
+            btn.addEventListener('touchstart', (e) => { e.preventDefault(); keys[targetKey] = true; });
+            btn.addEventListener('touchend', (e) => { e.preventDefault(); keys[targetKey] = false; });
+        }
+        hookMobileBtn('btn-left', 'left');
+        hookMobileBtn('btn-right', 'right');
+        hookMobileBtn('btn-jump', 'up');
+
+
+        // --- PLATFORM & ITEM GENERATION ---
+        function generatePlatforms() {
+            platforms = [];
+            items = [];
+            
+            if (level === 1) {
+                // Island level floor grass boundary
+                platforms.push({ x: 0, y: 460, width: 500, height: 40, type: 'grass' });
+            }
+
+            // Normal climbing progression platforms
+            if (level < 100) {
+                let startY = 400;
+                for (let i = 0; i < 6; i++) {
+                    const width = Math.random() * 50 + 60;
+                    const x = Math.random() * (500 - width);
+                    const y = startY - (i * 75);
+                    
+                    let pType = 'cloud';
+                    if (level === 1) pType = 'grass';
+                    else if (level >= 20 && level < 40) pType = 'space';
+                    else if (level >= 40) pType = 'nebula';
+
+                    platforms.push({ x: x, y: y, width: width, height: 12, type: pType });
+
+                    // Spawn Items with balanced chance (20%) on climbing platforms
+                    if (i > 0 && Math.random() < 0.20) {
+                        let rand = Math.random();
+                        let itemType = '';
+                        
+                        if (rand < 0.45) {
+                            itemType = 'boots';
+                        } else if (rand < 0.75) {
+                            itemType = 'heart';
+                        } else {
+                            itemType = 'jumppad'; // Jump Pad launcher spring item
+                        }
+
+                        items.push({
+                            x: x + width / 2 - 10,
+                            y: y - 18,
+                            width: 20,
+                            height: 16,
+                            type: itemType
+                        });
+                    }
+                }
+            } else {
+                // Boss level arena floor
+                platforms.push({ x: 50, y: 440, width: 400, height: 20, type: 'boss-arena' });
+            }
+        }
+
+        // --- ENEMY GENERATION BY ZONE LORE ---
+        function spawnEnemies() {
+            enemies = [];
+            
+            if (level < 100) {
+                platforms.forEach(p => {
+                    // Don't spawn on base level floor too close to start
+                    if (p.y > 440 && level === 1) return;
+
+                    // Reduced enemy spawn chance (25%) for cleaner movement paths
+                    const randomChance = Math.random() < 0.25;
+                    if (randomChance) {
+                        if (level >= 1 && level < 20) {
+                            // Goofy Island guys ONLY (Level 1-19)
+                            enemies.push({
+                                x: p.x + p.width/4,
+                                y: p.y - 18,
+                                width: 16,
+                                height: 18,
+                                speed: 0.8 + Math.random() * 0.5,
+                                patrolRange: p.width - 20,
+                                direction: 1,
+                                originX: p.x + p.width/4,
+                                type: 'island-crawler'
+                            });
+                        } else if (level >= 20 && level < 100) {
+                            // Little Space aliens ONLY (Level 20+)
+                            enemies.push({
+                                x: p.x + p.width/4,
+                                y: p.y - 24,
+                                width: 18,
+                                height: 24,
+                                speed: 1.2,
+                                patrolRange: p.width - 20,
+                                direction: 1,
+                                originX: p.x + p.width/4,
+                                type: 'space-alien',
+                                bobTimer: Math.random() * 10
+                            });
+                        }
+                    }
+                });
+
+                // Spawn secret flying skull NPCs launcher ONLY if Level >= 50
+                if (level >= 50 && Math.random() < 0.2) {
+                    enemies.push({
+                        x: Math.random() < 0.5 ? -40 : 540,
+                        y: player.y - 120 + Math.random() * 60,
+                        width: 20,
+                        height: 20,
+                        speed: 3,
+                        type: 'flying-skull',
+                        targetX: player.x,
+                        targetY: player.y,
+                        launchAngle: 0,
+                        isChasing: false
+                    });
+                }
+            }
+        }
+
+        // --- DYNAMIC VISUAL ENVIRONMENT ---
+        function updateEnvironmentAesthetic() {
+            const sky = document.getElementById('sky');
+            const grassFloor = document.getElementById('floor-dirt');
+            const menuClouds = document.getElementById('menu-clouds');
+
+            // Hide main menu clouds in game view
+            menuClouds.style.display = 'none';
+
+            if (level < 20) {
+                // Island and early Sky Zone
+                sky.style.background = '#5c94fc';
+                grassFloor.style.transform = 'translateY(100%)'; // Lower dirt floor on start
+                currentAltitudeZone = 1;
+            } else if (level >= 20 && level < 40) {
+                // Space altitude transition
+                sky.style.background = '#0d1321';
+                currentAltitudeZone = 2;
+            } else if (level >= 40 && level < 100) {
+                // Galaxy space neon altitude
+                sky.style.background = '#1a0933';
+                currentAltitudeZone = 3;
+            } else if (level === 100) {
+                // Boss level hell nebula
+                sky.style.background = '#470d0d';
+                currentAltitudeZone = 4;
+            }
+
+            // Sync procedural scale soundtrack zone
+            startProceduralMusic();
+        }
+
+        // --- MAIN GAME START INVOCATION ---
+        function startGame() {
+            initAudio();
+            switchWindow('window-main', 'window-game');
+            
+            // Reset player metrics
+            isGameOver = false;
+            player.x = 230;
+            player.y = 350;
+            player.vy = 0;
+            player.vx = 0;
+            player.lives = 3;
+            player.bootCharges = 0;
+            level = 1;
+            altitude = 0;
+            boss.active = false;
+
+            document.getElementById('game-alt-val').innerText = "0m";
+            document.getElementById('game-lvl-val').innerText = "1";
+
+            updateBootsUI();
+            updateLivesUI();
+            updateEnvironmentAesthetic();
+            generatePlatforms();
+            spawnEnemies();
+            
+            // Clear lists
+            shootingStars = [];
+            items = [];
+
+            // Start loop ticks
+            if (gameLoopId) cancelAnimationFrame(gameLoopId);
+            gameLoopId = requestAnimationFrame(gameTick);
+        }
+
+        // --- DEVELOPMENT WARP MECHANIC (___) ---
+        function devWarp(targetLvl) {
+            initAudio();
+            playBeep(650, 0.15, 'sawtooth');
+            
+            level = targetLvl;
+            altitude = (targetLvl - 1) * 125;
+            player.bootCharges = 0;
+            
+            // Trigger specific boss sequence state
+            if (level === 100) {
+                boss.active = true;
+                boss.hp = 2000;
+                boss.isAttacking = false;
+                boss.attackTimer = 0;
+                player.x = 240;
+                player.y = 350;
+            } else {
+                boss.active = false;
+                player.x = 230;
+                player.y = 350;
+            }
+
+            updateBootsUI();
+            updateLivesUI();
+            updateEnvironmentAesthetic();
+            generatePlatforms();
+            spawnEnemies();
+            
+            shootingStars = [];
+            document.getElementById('gameCanvas').focus();
+        }
+
+
+        // --- MAIN GAME LOOP TICK ---
+        function gameTick() {
+            if (isGameOver) return;
+
+            // Render Background Layers
+            renderSceneBackground();
+
+            // Handle Physics Engine
+            handlePhysics();
+
+            // Run collision checks
+            checkCollisions();
+
+            // Draw game sprites and layers
+            drawGameElements();
+
+            // Continue loop
+            gameLoopId = requestAnimationFrame(gameTick);
+        }
+
+        // --- PHYSICS & COLLISION CALCULATIONS ---
+        function handlePhysics() {
+            // Apply Movement controls
+            if (keys.left) {
+                player.vx = -player.speed;
+                player.limbSwing += 0.25;
+            } else if (keys.right) {
+                player.vx = player.speed;
+                player.limbSwing += 0.25;
+            } else {
+                player.vx = 0;
+            }
+
+            // Jump with dynamic jump boost on active boots power-up
+            if (keys.up && player.grounded) {
+                let currentJumpPower = player.jumpStrength;
+                
+                if (player.bootCharges > 0) {
+                    currentJumpPower = -15; // Boot jump boost active!
+                }
+
+                player.vy = currentJumpPower;
+                player.grounded = false;
+                
+                playBeep(player.bootCharges > 0 ? 440 : 330, 0.1, 'triangle');
+            }
+
+            // Apply gravity
+            player.vy += 0.45;
+
+            // Apply movement steps
+            player.x += player.vx;
+            player.y += player.vy;
+
+            // Screen boundary clamping left/right
+            if (player.x < 0) player.x = 0;
+            if (player.x + player.width > 500) player.x = 500 - player.width;
+
+            // Handle Camera progression scrolling (Climbing up)
+            if (player.y < 180 && level < 100) {
+                let diff = 180 - player.y;
+                player.y = 180;
+                
+                // Keep moving active items & platforms downward to simulate height
+                platforms.forEach(p => p.y += diff);
+                enemies.forEach(e => e.y += diff);
+                items.forEach(it => it.y += diff);
+
+                altitude += Math.floor(diff * 0.1);
+
+                // Update dynamic progression UI values
+                document.getElementById('game-alt-val').innerText = altitude + "m";
+
+                // Evaluate Level thresholds (Each 150m is a new level!)
+                let newLvl = Math.floor(altitude / 150) + 1;
+                if (newLvl > level && level < 100) {
+                    level = newLvl;
+                    if (level >= 100) level = 100;
+                    
+                    document.getElementById('game-lvl-val').innerText = level;
+                    playBeep(523.25, 0.15, 'triangle'); // Upbeat level tune trigger
+                    
+                    updateEnvironmentAesthetic();
+                    generatePlatforms();
+                    spawnEnemies();
+                }
+            }
+
+            // Fall Off Screen Check
+            if (player.y > 500) {
+                playerLossOfLife();
+            }
+
+            // Update Enemy logic
+            enemies.forEach(e => {
+                if (e.type === 'island-crawler' || e.type === 'space-alien') {
+                    e.x += e.speed * e.direction;
+                    // Auto reverse on limits of platform
+                    if (Math.abs(e.x - e.originX) > e.patrolRange / 2) {
+                        e.direction *= -1;
+                    }
+                    if (e.type === 'space-alien') {
+                        e.bobTimer += 0.08;
+                    }
+                } else if (e.type === 'flying-skull') {
+                    // Launch skull targeting player coordinate directly (Level >= 50)
+                    if (!e.isChasing) {
+                        let dx = player.x - e.x;
+                        let dy = player.y - e.y;
+                        e.launchAngle = Math.atan2(dy, dx);
+                        e.isChasing = true;
+                    }
+                    e.x += Math.cos(e.launchAngle) * e.speed;
+                    e.y += Math.sin(e.launchAngle) * e.speed;
+                }
+            });
+
+            // Delete offscreen flying skulls
+            enemies = enemies.filter(e => e.type !== 'flying-skull' || (e.x > -100 && e.x < 600));
+
+            // Generate shooting stars (ONLY level >= 40 galaxy zone)
+            if (level >= 40 && level < 100 && Math.random() < 0.02) {
+                shootingStars.push({
+                    x: Math.random() * 500,
+                    y: -10,
+                    targetX: player.x,
+                    targetY: player.y,
+                    speed: 6,
+                    vx: 0,
+                    vy: 0,
+                    initialized: false
+                });
+            }
+
+            // Update shooting star movements
+            shootingStars.forEach(s => {
+                if (!s.initialized) {
+                    let dx = s.targetX - s.x;
+                    let dy = s.targetY - s.y;
+                    let dist = Math.sqrt(dx*dx + dy*dy);
+                    s.vx = (dx / dist) * s.speed;
+                    s.vy = (dy / dist) * s.speed;
+                    s.initialized = true;
+                }
+                s.x += s.vx;
+                s.y += s.vy;
+            });
+
+            // Filter shooting stars remaining on-screen
+            shootingStars = shootingStars.filter(s => s.y < 520);
+
+            // Level 100 END GAME BOSS BATTLE LOOP ACTIONS
+            if (level === 100) {
+                boss.active = true;
+                boss.attackTimer++;
+
+                if (boss.attackTimer > 130) {
+                    // Trigger boss punch attack sequence
+                    boss.isAttacking = true;
+                    boss.attackTimer = 0;
+                    boss.strikeFrame = 0;
+                    // Target player position
+                    boss.attackX = player.x;
+                    playBeep(220, 0.3, 'sawtooth');
+                }
+
+                if (boss.isAttacking) {
+                    boss.strikeFrame++;
+                    if (boss.strikeFrame === 45) {
+                        // Slam down action occurs!
+                        playBeep(120, 0.4, 'square');
+                        
+                        // Check if player inside slamming coordinates range
+                        let punchLeft = boss.attackX - 30;
+                        let punchRight = boss.attackX + 50;
+                        
+                        if (player.x + player.width > punchLeft && player.x < punchRight && player.y > 380) {
+                            // Player Hit!
+                            playerLossOfLife();
+                            // Shake game container
+                            document.getElementById('window-game').classList.add('shake');
+                            setTimeout(() => {
+                                document.getElementById('window-game').classList.remove('shake');
+                            }, 400);
+                        } else {
+                            // SUCCESSFUL DODGE TRIGGER (-50 Boss Health)
+                            boss.hp -= 50;
+                            playBeep(880, 0.1, 'sine');
+                            
+                            // Visual Floating HP Pop-up text
+                            popupHPIndicator("-50 HP");
+
+                            if (boss.hp <= 0) {
+                                boss.hp = 0;
+                                showSystemModal("CONGRATULATIONS!<br><br>You defeated the giant red boss, restored lore peace, and beat Pixel Vixel!");
+                                cancelAnimationFrame(gameLoopId);
+                                switchWindow('window-game', 'window-main');
+                            }
+                        }
+                    }
+
+                    if (boss.strikeFrame > 65) {
+                        boss.isAttacking = false;
+                    }
+                }
+            }
+        }
+
+        // Floating dynamic text indicators
+        let floatingTexts = [];
+        function popupHPIndicator(text, color = '#ff3e3e') {
+            floatingTexts.push({
+                text: text,
+                x: 230,
+                y: 180,
+                color: color,
+                life: 40
+            });
+        }
+
+
+        // --- ROBUST COLLISION SYSTEM ---
+        function checkCollisions() {
+            player.grounded = false;
+
+            // Robust Platform collision check
+            platforms.forEach(p => {
+                if (player.x + player.width - 4 > p.x && player.x + 4 < p.x + p.width) {
+                    if (player.y + player.height >= p.y && player.y + player.height - player.vy <= p.y + 12) {
+                        if (player.vy >= 0) {
+                            player.grounded = true;
+                            player.vy = 0;
+                            player.y = p.y - player.height;
+                        }
+                    }
+                }
+            });
+
+            // Normal platform continuous loop regeneration
+            if (level < 100) {
+                platforms.forEach(p => {
+                    if (p.y > 500) {
+                        p.y = -10;
+                        p.x = Math.random() * (500 - p.width);
+                        
+                        // Spawn random items on recycled platforms (20% chance)
+                        if (Math.random() < 0.20) {
+                            let rand = Math.random();
+                            let itemType = '';
+                            
+                            if (rand < 0.45) {
+                                itemType = 'boots';
+                            } else if (rand < 0.75) {
+                                itemType = 'heart';
+                            } else {
+                                itemType = 'jumppad';
+                            }
+
+                            items.push({
+                                x: p.x + p.width / 2 - 10,
+                                y: p.y - 18,
+                                width: 20,
+                                height: 16,
+                                type: itemType
+                            });
+                        }
+
+                        // Spawn random enemy directly on the recycled platform (15% chance)
+                        const chance = Math.random() < 0.15;
+                        if (chance) {
+                            enemies.push({
+                                x: p.x + p.width/4,
+                                y: p.y - 20,
+                                width: 16,
+                                height: 18,
+                                speed: level >= 20 ? 1.4 : 0.9,
+                                patrolRange: p.width - 20,
+                                direction: Math.random() < 0.5 ? 1 : -1,
+                                originX: p.x + p.width/4,
+                                type: level >= 20 ? 'space-alien' : 'island-crawler',
+                                bobTimer: Math.random() * 5
+                            });
+                        }
+                    }
+                });
+            }
+
+            // Clean up offscreen items
+            items = items.filter(it => it.y < 520);
+
+            // Item Pickup collision check
+            items.forEach((it, idx) => {
+                if (player.x + player.width > it.x && player.x < it.x + it.width &&
+                    player.y + player.height > it.y && player.y < it.y + it.height) {
+                    
+                    if (it.type === 'boots') {
+                        player.bootCharges = 2; // Arm the super boots weapon
+                        playBeep(650, 0.25, 'sine');
+                        popupHPIndicator("BOOTS ACQUIRED!", '#00ffff');
+                        updateBootsUI();
+                        items.splice(idx, 1);
+                    } else if (it.type === 'heart') {
+                        if (player.lives < 5) { // Cap maximum life stack at 5 hearts
+                            player.lives++;
+                        }
+                        playBeep(550, 0.2, 'triangle');
+                        popupHPIndicator("+1 LIFE!", '#ff5e5e');
+                        updateLivesUI();
+                        items.splice(idx, 1);
+                    } else if (it.type === 'jumppad') {
+                        // Explosive upward spring launch!
+                        player.vy = -18; 
+                        altitude += 30; // Direct +30m altitude award
+                        
+                        document.getElementById('game-alt-val').innerText = altitude + "m";
+                        playBeep(880, 0.35, 'sine');
+                        popupHPIndicator("+30m LAUNCH!", '#74c33a');
+                        
+                        // Spawn cloud particles on launch
+                        items.splice(idx, 1);
+                    }
+                }
+            });
+
+            // Enemy stomp or collision check
+            enemies.forEach((e, idx) => {
+                if (player.x + player.width > e.x && player.x < e.x + e.width &&
+                    player.y + player.height > e.y && player.y < e.y + e.height) {
+                    
+                    // IF BOOTS POWER-UP IS ARMED: Stomp on contact from any side!
+                    if (player.bootCharges > 0) {
+                        playBeep(500, 0.15, 'sawtooth');
+                        enemies.splice(idx, 1);
+                        player.vy = -8.5; // Upward super bounce!
+                        player.bootCharges--;
+                        updateBootsUI();
+                        popupHPIndicator(`BOOT STOMP! (${player.bootCharges} left)`, '#00ffff');
+                    } else {
+                        // Regular collision logic (stomp only from top)
+                        if (player.vy > 0 && player.y + player.height - player.vy <= e.y + 8) {
+                            // Successful basic top stomp!
+                            playBeep(400, 0.1, 'sawtooth');
+                            enemies.splice(idx, 1);
+                            player.vy = -7; // Jump head-bounce
+                        } else {
+                            // Player takes hit!
+                            playerLossOfLife();
+                        }
+                    }
+                }
+            });
+
+            // Shooting stars collisions
+            shootingStars.forEach((s, idx) => {
+                if (s.x > player.x && s.x < player.x + player.width &&
+                    s.y > player.y && s.y < player.y + player.height) {
+                    
+                    shootingStars.splice(idx, 1);
+                    playerLossOfLife();
+                }
+            });
+        }
+
+        // --- MANAGE LIFE COUNT ---
+        function playDamageSound() {
+            playMusicTone(220, 0.18, 'triangle', 0.035);
+            playMusicTone(164.81, 0.22, 'triangle', 0.025, 0.08);
+        }
+
+        function playGameOverSound() {
+            playMusicTone(261.63, 0.18, 'square', 0.03);
+            playMusicTone(196.00, 0.24, 'triangle', 0.025, 0.16);
+            playMusicTone(130.81, 0.5, 'triangle', 0.02, 0.34);
+        }
+
+        function playerLossOfLife() {
+            if (isGameOver) return;
+
+            player.lives--;
+            player.bootCharges = 0; // Lost boots on taking damage
+            updateBootsUI();
+            updateLivesUI();
+
+            if (player.lives <= 0) {
+                isGameOver = true;
+                playGameOverSound();
+
+                if (gameLoopId) {
+                    cancelAnimationFrame(gameLoopId);
+                    gameLoopId = null;
+                }
+
+                document.getElementById('window-game').classList.remove('active');
+                document.getElementById('window-main').classList.add('active');
+                showSystemModal("GAME OVER!<br><br>Press OK, then PLAY GAME to try again.");
+            } else {
+                playDamageSound();
+
+                // Respawn safely onto the nearest platform
+                player.x = 230;
+                player.y = 150;
+                player.vy = 0;
+            }
+        }
+
+        // --- INTERFACE SYNC UP HELPERS ---
+        function updateBootsUI() {
+            let el = document.getElementById('game-boots-val');
+            if (player.bootCharges > 0) {
+                el.innerText = "👢".repeat(player.bootCharges);
+                el.style.color = "#00ffff";
+            } else {
+                el.innerText = "NONE";
+                el.style.color = "#888";
+            }
+        }
+
+        function updateLivesUI() {
+            let heartString = "";
+            for (let i = 0; i < player.lives; i++) heartString += "❤";
+            document.getElementById('game-lives-val').innerText = heartString || "💀";
+        }
+
+
+        // --- GRAPHICS RENDERING CANVAS ---
+        function renderSceneBackground() {
+            ctx.clearRect(0, 0, 500, 500);
+
+            // Celestial Stars renderer for Space level heights (20+)
+            if (level >= 20) {
+                backgroundStars.forEach(s => {
+                    ctx.fillStyle = `rgba(255, 255, 255, ${s.alpha})`;
+                    ctx.fillRect(s.x, s.y, s.size, s.size);
+                    
+                    // Light twinkle
+                    if (Math.random() < 0.05) s.alpha = Math.random();
+                });
+            }
+
+            // Draw beautiful planet and galaxy silhouettes in deep galaxy zone (40+)
+            if (level >= 40) {
+                ctx.fillStyle = "rgba(138, 43, 226, 0.15)";
+                ctx.beginPath();
+                ctx.arc(400, 100, 80, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = "rgba(0, 255, 255, 0.12)";
+                ctx.beginPath();
+                ctx.arc(100, 250, 40, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function drawGameElements() {
+            // Draw platforms
+            platforms.forEach(p => {
+                if (p.type === 'grass') {
+                    // Earth dirt
+                    ctx.fillStyle = '#8b5a2b';
+                    ctx.fillRect(p.x, p.y, p.width, p.height);
+                    // Light green grass capping
+                    ctx.fillStyle = '#74c33a';
+                    ctx.fillRect(p.x, p.y, p.width, 4);
+                } else if (p.type === 'cloud') {
+                    // Air Cloud Platform
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(p.x, p.y, p.width, p.height);
+                    ctx.fillStyle = '#dcdcdc';
+                    ctx.fillRect(p.x, p.y + p.height - 4, p.width, 4);
+                } else if (p.type === 'space') {
+                    // Cosmic Moon blocks
+                    ctx.fillStyle = '#4a5759';
+                    ctx.fillRect(p.x, p.y, p.width, p.height);
+                    ctx.fillStyle = '#00ffff';
+                    ctx.fillRect(p.x, p.y, p.width, 3);
+                } else if (p.type === 'nebula') {
+                    // Violet star block
+                    ctx.fillStyle = '#6f2db8';
+                    ctx.fillRect(p.x, p.y, p.width, p.height);
+                    ctx.fillStyle = '#ff00ff';
+                    ctx.fillRect(p.x, p.y, p.width, 3);
+                } else if (p.type === 'boss-arena') {
+                    // Safe red-brick floor of the final level
+                    ctx.fillStyle = '#3a0007';
+                    ctx.fillRect(p.x, p.y, p.width, p.height);
+                    ctx.fillStyle = '#ff3e3e';
+                    ctx.fillRect(p.x, p.y, p.width, 4);
+                }
+            });
+
+            // Draw Items (Boots, Hearts, and Spring Jump Pads)
+            items.forEach(it => {
+                if (it.type === 'boots') {
+                    // Draw a pair of cyan pixel-art boots
+                    ctx.fillStyle = '#00ffff';
+                    ctx.fillRect(it.x, it.y + 4, 6, 8);
+                    ctx.fillRect(it.x - 2, it.y + 8, 4, 4);
+                    
+                    ctx.fillRect(it.x + 8, it.y + 4, 6, 8);
+                    ctx.fillRect(it.x + 6, it.y + 8, 4, 4);
+
+                    // Golden wings detail
+                    ctx.fillStyle = '#ffff00';
+                    ctx.fillRect(it.x + 2, it.y + 2, 2, 2);
+                    ctx.fillRect(it.x + 10, it.y + 2, 2, 2);
+                } else if (it.type === 'heart') {
+                    // Draw classic pixel heart
+                    ctx.fillStyle = '#ff3e3e';
+                    ctx.fillRect(it.x + 2, it.y + 2, 4, 4);
+                    ctx.fillRect(it.x + 10, it.y + 2, 4, 4);
+                    ctx.fillRect(it.x, it.y + 6, 16, 4);
+                    ctx.fillRect(it.x + 2, it.y + 10, 12, 4);
+                    ctx.fillRect(it.x + 4, it.y + 14, 8, 4);
+                    ctx.fillRect(it.x + 6, it.y + 18, 4, 4);
+                } else if (it.type === 'jumppad') {
+                    // Draw a springy jump pad / springboard
+                    // Base platform plate
+                    ctx.fillStyle = '#4a5759';
+                    ctx.fillRect(it.x, it.y + 10, 20, 6);
+                    // Silver spring coils
+                    ctx.fillStyle = '#cccccc';
+                    ctx.fillRect(it.x + 4, it.y + 6, 3, 4);
+                    ctx.fillRect(it.x + 13, it.y + 6, 3, 4);
+                    // Bouncy red launch plate
+                    ctx.fillStyle = '#ff3e3e';
+                    ctx.fillRect(it.x + 1, it.y, 18, 6);
+                    // Center details
+                    ctx.fillStyle = '#ffff00';
+                    ctx.fillRect(it.x + 8, it.y + 2, 4, 2);
+                }
+            });
+
+            // Draw Goofy Player character
+            ctx.save();
+            
+            // Goofy eyes wobbling
+            player.eyeWobble += 0.05;
+            let eyeOffset = Math.sin(player.eyeWobble) * 2;
+
+            // Draw Head (Large yellow pixel-art sphere/square)
+            ctx.fillStyle = '#ffcc00';
+            ctx.fillRect(player.x, player.y, player.width, 20);
+
+            // Goofy Large Eyes (Black on White)
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(player.x + 3, player.y + 4, 7, 7);
+            ctx.fillRect(player.x + 13, player.y + 4, 7, 7);
+
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(player.x + 5 + Math.floor(eyeOffset/2), player.y + 6, 3, 3);
+            ctx.fillRect(player.x + 15 - Math.floor(eyeOffset/2), player.y + 6, 3, 3);
+
+            // Scurrilous Mouth
+            ctx.fillStyle = '#aa0000';
+            ctx.fillRect(player.x + 7, player.y + 14, 10, 2);
+
+            // Tiny Microscopic Torso
+            ctx.fillStyle = '#3a86c8';
+            ctx.fillRect(player.x + 7, player.y + 20, 10, 6);
+
+            // Tiny stick legs swing calculations
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 3;
+            
+            let legMovementLeft = Math.sin(player.limbSwing) * 5;
+            let legMovementRight = -Math.sin(player.limbSwing) * 5;
+
+            if (!player.grounded) {
+                legMovementLeft = Math.sin(Date.now() * 0.05) * 8;
+                legMovementRight = -Math.sin(Date.now() * 0.05) * 8;
+            }
+
+            // Left Leg
+            ctx.beginPath();
+            ctx.moveTo(player.x + 9, player.y + 26);
+            ctx.lineTo(player.x + 8 + legMovementLeft, player.y + 32);
+            ctx.stroke();
+
+            // Right Leg
+            ctx.beginPath();
+            ctx.moveTo(player.x + 15, player.y + 26);
+            ctx.lineTo(player.x + 16 + legMovementRight, player.y + 32);
+            ctx.stroke();
+
+            // DRAW EQUIPPED WEAPON BOOTS ON FEET (Rendered larger when charges > 0)
+            if (player.bootCharges > 0) {
+                ctx.fillStyle = '#00ffff';
+                // Left Boot
+                ctx.fillRect(player.x + 3 + legMovementLeft, player.y + 28, 9, 5);
+                ctx.fillRect(player.x + 1 + legMovementLeft, player.y + 31, 5, 2);
+                
+                // Right Boot
+                ctx.fillRect(player.x + 11 + legMovementRight, player.y + 28, 9, 5);
+                ctx.fillRect(player.x + 9 + legMovementRight, player.y + 31, 5, 2);
+            }
+
+            ctx.restore();
+
+            // Draw Normal Enemies
+            enemies.forEach(e => {
+                if (e.type === 'island-crawler') {
+                    // Goofy green land dweller (Lvl 1-19)
+                    ctx.fillStyle = '#2d6a4f';
+                    ctx.fillRect(e.x, e.y, e.width, e.height);
+                    // Single eye
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(e.x + 4, e.y + 4, 8, 8);
+                    ctx.fillStyle = '#000000';
+                    ctx.fillRect(e.x + 7, e.y + 7, 3, 3);
+                } else if (e.type === 'space-alien') {
+                    // Small floating orbit alien (Lvl 20+)
+                    let floatBob = Math.sin(e.bobTimer) * 4;
+                    ctx.fillStyle = '#00ff66';
+                    ctx.fillRect(e.x, e.y + floatBob, e.width, e.height);
+                    ctx.fillStyle = '#ffff00';
+                    ctx.fillRect(e.x + 2, e.y - 3 + floatBob, 4, 4);
+                    ctx.fillRect(e.x + 12, e.y - 3 + floatBob, 4, 4);
+                } else if (e.type === 'flying-skull') {
+                    // NPC skull (Lvl 50+)
+                    ctx.fillStyle = '#f7ebe8';
+                    ctx.fillRect(e.x, e.y, e.width, e.height);
+                    ctx.fillStyle = '#111111';
+                    ctx.fillRect(e.x + 3, e.y + 3, 4, 4);
+                    ctx.fillRect(e.x + 13, e.y + 3, 4, 4);
+                }
+            });
+
+            // Draw Shooting Stars (Lvl 40+)
+            shootingStars.forEach(s => {
+                ctx.fillStyle = '#ffff00';
+                ctx.fillRect(s.x, s.y, 6, 6);
+                
+                // Tail shadow
+                ctx.fillStyle = 'rgba(255,255,0,0.4)';
+                ctx.fillRect(s.x - s.vx*1.5, s.y - s.vy*1.5, 4, 4);
+            });
+
+            // Draw Boss Target punches warnings
+            if (boss.active && boss.isAttacking) {
+                ctx.fillStyle = 'rgba(255, 0, 0, 0.35)';
+                ctx.fillRect(boss.attackX - 30, 420, 80, 20);
+                
+                ctx.fillStyle = '#ff0000';
+                ctx.font = '7px "Press Start 2P"';
+                ctx.fillText("! WARNING !", boss.attackX - 35, 410);
+
+                if (boss.strikeFrame > 35) {
+                    let progressY = (boss.strikeFrame - 35) * 15;
+                    ctx.fillStyle = '#ff3e3e';
+                    ctx.fillRect(boss.attackX - 15, 60 + progressY, 50, 40);
+                }
+            }
+
+            // Draw Giant Boss Red Guy (Level 100 Boss Arena)
+            if (boss.active) {
+                ctx.fillStyle = '#9b0000';
+                ctx.fillRect(boss.x, boss.y, boss.width, boss.height);
+
+                ctx.fillStyle = '#e5a93b';
+                ctx.fillRect(boss.x + 20, boss.y + 20, 30, 20);
+                ctx.fillRect(boss.x + 90, boss.y + 20, 30, 20);
+
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(boss.x + 40, boss.y + 65, 60, 10);
+
+                // Draw Boss Health Bar Status overlay
+                ctx.fillStyle = '#222';
+                ctx.fillRect(100, 20, 300, 16);
+                
+                let hpPercent = boss.hp / boss.maxHP;
+                ctx.fillStyle = '#ff0000';
+                ctx.fillRect(102, 22, 296 * hpPercent, 12);
+
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '7px "Press Start 2P"';
+                ctx.fillText(`BOSS HP: ${boss.hp}/2000`, 150, 31);
+            }
+
+            // Render active pop-up indicators
+            floatingTexts.forEach((ft, idx) => {
+                ctx.fillStyle = ft.color;
+                ctx.font = '7px "Press Start 2P"';
+                ctx.fillText(ft.text, ft.x - 40, ft.y);
+                ft.y -= 1;
+                ft.life--;
+                if (ft.life <= 0) floatingTexts.splice(idx, 1);
+            });
+        }
+    </script>
+</body>
+</html>

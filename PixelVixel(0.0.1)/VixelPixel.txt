@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Vixel - Main Menu</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+    <style>
+        /* Reset and Base Styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Press Start 2P', monospace;
+            background-color: #5c94fc; /* Classic retro sky blue */
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* --- PIXEL ART BACKGROUND --- */
+        
+        /* Pixelated Clouds */
+        .sky-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            background-image: 
+                linear-gradient(90deg, transparent 90%, rgba(255,255,255,0.1) 90%),
+                linear-gradient(transparent 90%, rgba(255,255,255,0.1) 90%);
+            background-size: 8px 8px; /* Creates a subtle screen grid effect */
+        }
+
+        /* Rolling Pixel Grass Hills (CSS Generated) */
+        .grass-floor {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 25vh;
+            background: #5c9e31; /* Main grass color */
+            z-index: 2;
+            /* Creating pixelated dirt layers using box-shadow steps */
+            border-top: 12px solid #74c33a; /* Light grass highlight */
+            box-shadow: 
+                inset 0 24px 0 #477d26,  /* Dark grass shadow */
+                inset 0 44px 0 #8b5a2b,  /* Top Dirt */
+                inset 0 100vh 0 #6e401f; /* Deep Dirt */
+        }
+
+        /* --- MENU CONTAINER --- */
+        .menu-container {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 40px;
+            /* Pixel art border for the menu box */
+            background: #181010;
+            border: 8px solid #ffffff;
+            outline: 8px solid #181010;
+            box-shadow: 15px 15px 0px rgba(0, 0, 0, 0.4);
+        }
+
+        /* --- GAME TITLE --- */
+        .game-title {
+            font-size: 3rem;
+            color: #ffffff;
+            margin-bottom: 50px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 
+                6px 6px 0px #477d26, /* Grassy green shadow */
+                -3px -3px 0px #000, 
+                3px -3px 0px #000, 
+                -3px 3px 0px #000, 
+                3px 3px 0px #000;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        /* --- BUTTONS --- */
+        .menu-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 280px;
+        }
+
+        .btn {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 1rem;
+            color: #ffffff;
+            background-color: #a0522d; /* Dirt brown */
+            padding: 15px 20px;
+            border: 4px solid #ffffff;
+            cursor: pointer;
+            position: relative;
+            text-shadow: 2px 2px 0px #000;
+            box-shadow: inset -4px -4px 0px #5c2e16, inset 4px 4px 0px #cd853f;
+            image-rendering: pixelated;
+            transition: transform 0.1s ease;
+        }
+
+        /* Grassy Hover Effect */
+        .btn:hover {
+            background-color: #5c9e31; /* Turns green on hover */
+            box-shadow: inset -4px -4px 0px #3a661f, inset 4px 4px 0px #74c33a;
+            transform: scale(1.05);
+        }
+
+        /* Click/Active State */
+        .btn:active {
+            transform: scale(0.95);
+            box-shadow: inset 4px 4px 0px #3a661f, inset -4px -4px 0px #74c33a;
+        }
+
+        /* Specific style for a prominent "PLAY" button */
+        .btn-play {
+            background-color: #5c9e31;
+            box-shadow: inset -4px -4px 0px #3a661f, inset 4px 4px 0px #74c33a;
+        }
+        .btn-play:hover {
+            background-color: #74c33a;
+            box-shadow: inset -4px -4px 0px #5c9e31, inset 4px 4px 0px #a6e246;
+        }
+
+        /* --- ANIMATIONS --- */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        /* --- FOOTER --- */
+        .footer {
+            position: absolute;
+            bottom: 15px;
+            right: 20px;
+            z-index: 3;
+            font-size: 0.6rem;
+            color: #ffffff;
+            text-shadow: 2px 2px 0px #000;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sky-bg"></div>
+    <div class="grass-floor"></div>
+
+    <div class="menu-container">
+        <h1 class="game-title">Pixel<br>Vixel</h1>
+        
+        <div class="menu-buttons">
+            <button class="btn btn-play" onclick="menuAction('Play')">START GAME</button>
+            <button class="btn" onclick="menuAction('Options')">OPTIONS</button>
+            <button class="btn" onclick="menuAction('Credits')">CREDITS</button>
+            <button class="btn" onclick="menuAction('Quit')">QUIT</button>
+        </div>
+    </div>
+
+    <div class="footer">© 2026 PIXEL VIXEL STUDIOS</div>
+
+    <script>
+        function menuAction(action) {
+            alert(action + " button clicked! Customize this function to launch your game levels or open menus.");
+            // Example: if(action === 'Play') { window.location.href = 'Levels1-100.html'; }
+        }
+    </script>
+</body>
+</html>
