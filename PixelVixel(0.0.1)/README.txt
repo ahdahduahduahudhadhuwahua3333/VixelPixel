@@ -10,9 +10,13 @@ ________________________________________________________________________________
 2-Enjoy!
 
 *You Can drag it to Your DeskTop For Better Accessibility*
+on github u do this
+-right click PixelVixel folder and click save as then put it in desktop (or somwhere u can get to it better!) 
+-then double click the html file and play
 
 
-
+(dont copy it then repost anywhere its my project i spent days on) 
+however you can email me hh6148283@gmail.com for permission to   :) 
 
 
 (Copyright Rules? you can change all you want if u need a fresh copy delete the whole file and get another one! :)
