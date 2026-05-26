@@ -17,6 +17,10 @@ on github u do this
 
 (dont copy it then repost anywhere its my project i spent days on) 
 however you can email me hh6148283@gmail.com for permission to   :) 
+Mobile download
+
+-Coming soon! 
+
 
 
 (Copyright Rules? you can change all you want if u need a fresh copy delete the whole file and get another one! :)
